@@ -43,9 +43,16 @@ export class InMemoryAttemptRepository implements IAttemptRepository {
     return highest + 1;
   }
 
-  async findLatestCompleted(problemId: ProblemId, userId: UserId): Promise<Attempt | null> {
+  async findLatestCompleted(
+    problemId: ProblemId,
+    userId: UserId,
+    beforeAttemptNumber?: number,
+  ): Promise<Attempt | null> {
     const completed = (await this.findByProblemAndUser(problemId, userId)).filter(
-      (attempt) => attempt.status === AttemptStatus.COMPLETED && attempt.result !== null,
+      (attempt) =>
+        attempt.status === AttemptStatus.COMPLETED &&
+        attempt.result !== null &&
+        (beforeAttemptNumber === undefined || attempt.attemptNumber < beforeAttemptNumber),
     );
 
     return completed.at(-1) ?? null;

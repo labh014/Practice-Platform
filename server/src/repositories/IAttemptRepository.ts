@@ -30,8 +30,18 @@ export interface IAttemptRepository {
    * The most recent COMPLETED attempt, which is what a new attempt is compared
    * against. Attempts that failed evaluation are skipped: comparing against an
    * attempt with no result would mean inventing scores that were never awarded.
+   *
+   * `beforeAttemptNumber` restricts the search to attempts made earlier, which
+   * matters on retry. Re-evaluating a failed attempt 2 must compare against
+   * attempt 1, not against an attempt 3 that has since completed - otherwise
+   * the delta would claim the learner regressed against work they had not yet
+   * done.
    */
-  findLatestCompleted(problemId: ProblemId, userId: UserId): Promise<Attempt | null>;
+  findLatestCompleted(
+    problemId: ProblemId,
+    userId: UserId,
+    beforeAttemptNumber?: number,
+  ): Promise<Attempt | null>;
 
   /** Every attempt by this learner, newest first. Used for catalogue summaries. */
   findAllByUser(userId: UserId): Promise<Attempt[]>;
