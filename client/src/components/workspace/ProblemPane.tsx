@@ -1,5 +1,6 @@
 import { overallScoreColour, statusLabel } from '../../lib/format';
 import type { AttemptSummary, ChangeScenario, Problem, Requirement } from '../../types/api';
+import { ProgressTrend } from './ProgressTrend';
 
 interface ProblemPaneProps {
   problem: Problem;
@@ -54,6 +55,8 @@ export function ProblemPane({
           onStartNew={onStartNewAttempt}
           isDrafting={isDrafting}
         />
+
+        <ProgressTrend attempts={attempts} dimensions={problem.dimensions} />
       </div>
     </aside>
   );

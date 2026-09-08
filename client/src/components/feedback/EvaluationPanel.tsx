@@ -1,5 +1,6 @@
 import type { EvaluationResult, StructuralFinding, TradeOff } from '../../types/api';
 import { FeedbackCard } from './FeedbackCard';
+import { ImprovementDelta } from './ImprovementDelta';
 import { ScoreSummary } from './ScoreSummary';
 import './feedback.css';
 
@@ -25,6 +26,13 @@ export function EvaluationPanel({ result, structuralFindings }: EvaluationPanelP
         dimensionScores={result.dimensionScores}
         evaluatorModel={result.evaluatorModel}
       />
+
+      {/*
+        Placed directly after the scores rather than last in the PRD's display
+        order. "Did I get better" is the question a returning learner opens the
+        page to answer, and it reads as one thought with the scores it compares.
+      */}
+      {result.comparison ? <ImprovementDelta comparison={result.comparison} /> : null}
 
       {result.strengths.length > 0 ? (
         <section className="section">
