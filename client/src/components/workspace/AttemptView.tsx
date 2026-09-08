@@ -1,9 +1,9 @@
 import { formatDate, statusLabel } from '../../lib/format';
-import type { Attempt, Problem } from '../../types/api';
+import type { Attempt } from '../../types/api';
+import { EvaluationPanel } from '../feedback/EvaluationPanel';
 
 interface AttemptViewProps {
   attempt: Attempt;
-  problem: Problem;
   timedOut: boolean;
   onRetry: () => void;
   onTryAgain: () => void;
@@ -16,12 +16,9 @@ interface AttemptViewProps {
  * The design stays pinned at the top whatever the state (PRD 6.1). Feedback the
  * learner cannot see their own code beside is feedback they have to reconstruct
  * from memory, which is most of the reason generic advice feels useless.
- *
- * Phase 9 replaces the placeholder below with the rendered evaluation.
  */
 export function AttemptView({
   attempt,
-  problem,
   timedOut,
   onRetry,
   onTryAgain,
@@ -56,12 +53,10 @@ export function AttemptView({
       ) : null}
 
       {attempt.status === 'COMPLETED' && attempt.result ? (
-        <section className="panel">
-          <p className="muted">
-            Scored {attempt.result.overallScore}/100 across {problem.dimensions.length} dimensions,
-            with {attempt.result.feedback.length} findings.
-          </p>
-        </section>
+        <EvaluationPanel
+          result={attempt.result}
+          structuralFindings={attempt.structuralFindings}
+        />
       ) : null}
     </div>
   );

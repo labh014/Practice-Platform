@@ -192,7 +192,6 @@ export default function WorkspacePage() {
           ) : polling.attempt ? (
             <AttemptView
               attempt={polling.attempt}
-              problem={problem}
               timedOut={polling.timedOut}
               retrying={retrying}
               onRetry={() => void handleRetryEvaluation()}

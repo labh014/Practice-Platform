@@ -1,0 +1,386 @@
+.evaluation {
+  margin-top: 20px;
+}
+
+.section {
+  margin-top: 26px;
+}
+
+.section__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.section__count {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--border);
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 0;
+}
+
+.section__lede {
+  margin: -4px 0 10px;
+  font-size: 12.5px;
+}
+
+.section__empty {
+  padding: 14px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+
+/* --------------------------------------------------------------- scorecard */
+
+.scorecard {
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.scorecard__head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.scorecard__overall {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.scorecard__overall-value {
+  font-size: 34px;
+  font-weight: 680;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.scorecard__overall-max {
+  font-size: 14px;
+}
+
+.scorecard__derivation {
+  flex: 1;
+  min-width: 240px;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.dimensions {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dimension {
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.dimension:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.dimension__head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.dimension__name {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.dimension__weight {
+  font-size: 11px;
+}
+
+/* Five pips rather than a continuous bar: the scale is 0-5, and a bar invites
+   reading a 3 as "about 60%" when it is a specific described band. */
+.dimension__meter {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.dimension__pip {
+  width: 16px;
+  height: 5px;
+  border-radius: 2px;
+}
+
+.dimension__score {
+  min-width: 34px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.dimension__score-max {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.dimension__band {
+  margin-top: 7px;
+  padding-left: 9px;
+  border-left: 2px solid var(--border-strong);
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.dimension__justification {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+/* --------------------------------------------------------------- strengths */
+
+.strengths {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.strengths__item {
+  position: relative;
+  padding: 9px 12px 9px 30px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 13px;
+}
+
+.strengths__item::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 15px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--improved);
+}
+
+/* ----------------------------------------------------------- feedback cards */
+
+.feedback-list {
+  display: grid;
+  gap: 12px;
+}
+
+.feedback-card {
+  padding: 15px 16px;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-left-style: solid;
+  border-radius: var(--radius);
+}
+
+.feedback-card__head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.feedback-card__severity {
+  padding: 1px 7px;
+  font-size: 9.5px;
+}
+
+.feedback-card__category {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.feedback-card__dimension {
+  margin-left: auto;
+  font-size: 11.5px;
+}
+
+.feedback-card__issue {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.feedback-card__section {
+  margin-top: 11px;
+}
+
+.feedback-card__label {
+  margin: 0 0 2px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.feedback-card__body {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.feedback-card__foot {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 13px;
+  padding-top: 11px;
+  border-top: 1px solid var(--border);
+}
+
+.chip {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.chip--principle {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- evidence */
+
+/* The learner's own words, quoted back. Set in monospace on a sunken ground so
+   it reads unmistakably as their code rather than as more prose about it. */
+.evidence {
+  margin: 11px 0 0;
+}
+
+.evidence__label {
+  margin-bottom: 4px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.evidence__code {
+  margin: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+/* -------------------------------------------------------------- trade-offs */
+
+.tradeoffs {
+  display: grid;
+  gap: 10px;
+}
+
+.tradeoff {
+  padding: 14px 15px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.tradeoff__decision {
+  margin-bottom: 10px;
+  font-size: 13.5px;
+}
+
+.tradeoff__sides {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.tradeoff__label {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.tradeoff__label--up {
+  color: var(--improved);
+}
+
+.tradeoff__label--down {
+  color: var(--major);
+}
+
+.tradeoff__text {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* -------------------------------------------------------------- structural */
+
+.structural {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.structural__item {
+  padding: 8px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 12.5px;
+}
+
+.structural__detail {
+  font-size: 12px;
+}
+
+@media (max-width: 720px) {
+  .tradeoff__sides {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .dimension__meter {
+    display: none;
+  }
+}
