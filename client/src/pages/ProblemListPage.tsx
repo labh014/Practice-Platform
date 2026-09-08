@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { api } from '../api/client';
-import { ErrorState, LoadingState } from '../components/States';
+import { EmptyState, ErrorState, LoadingState } from '../components/States';
 import { useAsync } from '../hooks/useAsync';
 import { overallScoreColour, statusLabel } from '../lib/format';
 import type { ProblemSummary } from '../types/api';
@@ -21,6 +21,17 @@ export default function ProblemListPage() {
   if (loading && !data) return <LoadingState label="Loading problems" />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
   if (!data) return null;
+
+  // Cannot happen with the seeded catalogue, but a blank page is the worst
+  // possible answer to "what should I practise" if it ever does.
+  if (data.length === 0) {
+    return (
+      <EmptyState title="No problems available">
+        The server started without a problem catalogue. Restarting it should restore the
+        seeded problems.
+      </EmptyState>
+    );
+  }
 
   return (
     <div className="catalogue">

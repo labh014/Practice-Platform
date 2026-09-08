@@ -1,3 +1,5 @@
+import type React from 'react';
+
 import type { Draft } from '../../hooks/useDraft';
 
 interface SubmissionEditorProps {
@@ -38,8 +40,23 @@ export function SubmissionEditor({
     draft.designDecisions.trim().length === 0 &&
     draft.assumptions.trim().length === 0;
 
+  /**
+   * Ctrl/Cmd+Enter submits from any field.
+   *
+   * The submit button sits below three tall textareas, so someone who has just
+   * finished typing has to scroll past their own work to reach it. Plain Enter
+   * stays a newline - these are multi-line fields and losing a draft to a stray
+   * keypress would be unforgivable.
+   */
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && !submitting) {
+      event.preventDefault();
+      onSubmit();
+    }
+  };
+
   return (
-    <div className="editor">
+    <div className="editor" onKeyDown={handleKeyDown}>
       <header className="editor__head">
         <div>
           <h2 className="editor__title">Attempt {attemptNumber}</h2>
@@ -96,6 +113,10 @@ export function SubmissionEditor({
         >
           {submitting ? 'Submitting…' : 'Submit for review'}
         </button>
+
+        <kbd className="editor__kbd">Ctrl</kbd>
+        <span className="subtle editor__kbd-sep">+</span>
+        <kbd className="editor__kbd">Enter</kbd>
 
         {empty ? (
           <span className="subtle editor__hint">

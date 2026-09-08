@@ -110,7 +110,7 @@ function EvaluatingPanel({ timedOut, onRefresh }: { timedOut: boolean; onRefresh
   }
 
   return (
-    <section className="panel panel--busy">
+    <section className="panel panel--busy" role="status" aria-live="polite">
       <div className="spinner" aria-hidden />
       <div>
         <h3 className="panel__title">Reviewing your design</h3>
@@ -139,7 +139,7 @@ function FailurePanel({
   retrying: boolean;
 }) {
   return (
-    <section className="panel panel--error">
+    <section className="panel panel--error" role="alert">
       <h3 className="panel__title">Evaluation did not complete</h3>
       <p className="muted">
         Your design above is saved exactly as you submitted it. This was a problem with the
