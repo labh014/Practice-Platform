@@ -1,0 +1,492 @@
+/* ------------------------------------------------------------------- layout */
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) 1fr;
+  height: calc(100vh - var(--header-height));
+}
+
+/* Each pane scrolls on its own, so the requirements stay reachable while the
+   learner is deep in their design or deep in the feedback. */
+.pane {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pane--left {
+  background: var(--surface-sunken);
+  border-right: 1px solid var(--border);
+}
+
+.pane__scroll {
+  height: 100%;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.pane--right .pane__scroll {
+  padding: 24px 28px 96px;
+}
+
+/* -------------------------------------------------------------- left: brief */
+
+.brief__title {
+  font-size: 19px;
+  letter-spacing: -0.02em;
+}
+
+.brief__description {
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  white-space: pre-line;
+}
+
+.pane-section {
+  margin-top: 28px;
+}
+
+.pane-section__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.pane-section__count {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--border);
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 0;
+}
+
+.pane-section__flag {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+
+/* ------------------------------------------------------- left: requirements */
+
+.requirements {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.requirement {
+  padding: 9px 10px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.requirement__head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 3px;
+}
+
+.requirement__id {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-subtle);
+}
+
+.requirement__importance {
+  padding: 0 6px;
+  font-size: 9.5px;
+}
+
+.requirement__importance--high {
+  background: var(--critical-soft);
+  border-color: var(--critical-border);
+  color: var(--critical);
+}
+
+.requirement__importance--medium {
+  background: var(--major-soft);
+  border-color: var(--major-border);
+  color: var(--major);
+}
+
+.requirement__importance--low {
+  background: var(--minor-soft);
+  border-color: var(--minor-border);
+  color: var(--minor);
+}
+
+.requirement__text {
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------- left: scenario */
+
+.scenario {
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+}
+
+.scenario__title {
+  font-size: 13px;
+}
+
+.scenario__body {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  white-space: pre-line;
+}
+
+.scenario__note {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--accent-border);
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* -------------------------------------------------------------- left: rail */
+
+.attempt-rail {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.attempt-rail__empty {
+  font-size: 12.5px;
+}
+
+.attempt-chip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.attempt-chip:hover {
+  border-color: var(--border-strong);
+}
+
+.attempt-chip--active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.attempt-chip__number {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-subtle);
+}
+
+.attempt-chip__score {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.attempt-chip__status,
+.attempt-chip__issues {
+  font-size: 11.5px;
+}
+
+.attempt-chip__issues {
+  margin-left: auto;
+}
+
+.attempt-rail__new {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.attempt-rail__new--active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------------ right: editor */
+
+.editor {
+  max-width: 780px;
+}
+
+.editor__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.editor__title {
+  font-size: 18px;
+}
+
+.editor__subtitle {
+  margin-top: 3px;
+  font-size: 12.5px;
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+.field__label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.field__name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.field__count {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.field__hint {
+  margin: 2px 0 7px;
+  font-size: 12px;
+}
+
+.field__input {
+  display: block;
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.field__input--mono {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  tab-size: 2;
+}
+
+.field__input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.field__input::placeholder {
+  color: var(--text-subtle);
+  opacity: 0.75;
+}
+
+.editor__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.editor__hint {
+  font-size: 12px;
+}
+
+.editor__error {
+  margin-bottom: 12px;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  background: var(--critical-soft);
+  border: 1px solid var(--critical-border);
+  color: var(--critical);
+  font-size: 12.5px;
+}
+
+/* ------------------------------------------------------ right: attempt view */
+
+.attempt-view {
+  max-width: 820px;
+}
+
+.attempt-view__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.attempt-view__title {
+  font-size: 18px;
+}
+
+.attempt-view__meta {
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+/* The submitted design stays pinned above the feedback (PRD 6.1). */
+.submitted {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.submitted__label {
+  margin-bottom: 5px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.submitted__body {
+  margin: 0;
+  padding: 11px 13px;
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+.submitted__body--mono {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  white-space: pre;
+}
+
+.submitted__empty {
+  font-size: 12.5px;
+  font-style: italic;
+}
+
+/* ------------------------------------------------------------ right: panels */
+
+.panel {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.panel__title {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.panel__subtitle {
+  margin: 14px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.panel__detail {
+  margin-top: 8px;
+  font-size: 11.5px;
+  word-break: break-word;
+}
+
+.panel--busy {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.panel--busy .spinner {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.panel--warn {
+  background: var(--major-soft);
+  border-color: var(--major-border);
+}
+
+.panel--error {
+  background: var(--critical-soft);
+  border-color: var(--critical-border);
+}
+
+.panel--error .panel__title {
+  color: var(--critical);
+}
+
+.panel .btn {
+  margin-top: 12px;
+}
+
+.findings {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.findings__item {
+  font-size: 12.5px;
+}
+
+.findings__message {
+  color: var(--text);
+}
+
+/* ------------------------------------------------------------- narrow view */
+
+@media (max-width: 900px) {
+  .workspace {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .pane--left {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pane__scroll {
+    height: auto;
+    overflow-y: visible;
+  }
+}

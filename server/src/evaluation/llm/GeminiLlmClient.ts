@@ -6,6 +6,7 @@ import {
   LlmClientError,
   describe,
 } from './LlmClient';
+import { providerError } from './providerError';
 
 const PROVIDER = 'gemini';
 
@@ -74,10 +75,7 @@ export class GeminiLlmClient implements LlmClient {
     );
 
     if (!response.ok) {
-      throw new LlmClientError(
-        PROVIDER,
-        `HTTP ${response.status}: ${await safeErrorText(response)}`,
-      );
+      throw await providerError(response, PROVIDER);
     }
 
     let body: GeminiResponse;
@@ -105,10 +103,3 @@ export class GeminiLlmClient implements LlmClient {
   }
 }
 
-async function safeErrorText(response: Response): Promise<string> {
-  try {
-    return (await response.text()).slice(0, 500);
-  } catch {
-    return response.statusText;
-  }
-}

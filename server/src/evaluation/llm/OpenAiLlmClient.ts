@@ -6,6 +6,7 @@ import {
   LlmClientError,
   describe,
 } from './LlmClient';
+import { providerError } from './providerError';
 
 const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 const PROVIDER = 'openai';
@@ -67,10 +68,7 @@ export class OpenAiLlmClient implements LlmClient {
     );
 
     if (!response.ok) {
-      throw new LlmClientError(
-        PROVIDER,
-        `HTTP ${response.status}: ${await safeErrorText(response)}`,
-      );
+      throw await providerError(response, PROVIDER);
     }
 
     let body: OpenAiResponse;
@@ -90,13 +88,5 @@ export class OpenAiLlmClient implements LlmClient {
     }
 
     return content;
-  }
-}
-
-async function safeErrorText(response: Response): Promise<string> {
-  try {
-    return (await response.text()).slice(0, 500);
-  } catch {
-    return response.statusText;
   }
 }
