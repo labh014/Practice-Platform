@@ -179,6 +179,31 @@ export function wellSeparatedSubmission(): Submission {
   });
 }
 
+/**
+ * The canonical Vending Machine mistake: one class, with booleans standing in
+ * for the state machine the problem is actually about.
+ */
+export function booleanStateVendingMachine(): Submission {
+  return Submission.create({
+    designSkeleton: [
+      'class VendingMachine {',
+      '  Map<String, Product> products;',
+      '  int insertedAmount;',
+      '  boolean isDispensing;',
+      '  boolean hasSelection;',
+      '  insertCoin(Coin c) { }',
+      '  selectProduct(String code) { }',
+      '  calculateChange() { }',
+      '  dispense() { }',
+      '}',
+    ].join('\n'),
+    designDecisions:
+      'Used boolean flags to track what the machine is doing right now, since there ' +
+      'are only a few situations to keep straight.',
+    assumptions: 'Assumed the machine always holds enough coins to make change.',
+  });
+}
+
 export function emptySubmission(): Submission {
   return Submission.create({ designSkeleton: '', designDecisions: '', assumptions: '' });
 }

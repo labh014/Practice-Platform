@@ -65,6 +65,7 @@ export class MockLlmClient implements LlmClient {
 
     const feedback = [
       godClassFinding(reading, dimensions),
+      booleanStateFinding(reading, dimensions),
       hardWiredPricingFinding(reading, dimensions),
       noAbstractionFinding(reading, dimensions),
       missingVehicleTypesFinding(reading, dimensions),
@@ -123,7 +124,10 @@ interface SubmissionReading {
   readonly allocationLine: string | null;
   readonly pricingLine: string | null;
   readonly ticketLine: string | null;
+  readonly inventoryLine: string | null;
   readonly vehicleTypeLine: string | null;
+  readonly booleanStateLine: string | null;
+  /** How many distinct responsibility families are visible in the skeleton. */
   readonly concernCount: number;
 }
 
@@ -138,12 +142,28 @@ function readSubmission(sections: {
   const skeleton = sections.designSkeleton;
   const typeNames = matchAll(skeleton, TYPE_PATTERN);
 
-  const allocationLine = findLine(skeleton, /assign|allocat|findspot|park\w*\(|reserve/i);
-  const pricingLine = findLine(skeleton, /fee|price|charge|cost|bill|payment|pay\(/i);
-  const ticketLine = findLine(skeleton, /ticket/i);
+  // Responsibility families, written broadly enough to read both seeded problems.
+  // A parking lot allocates and prices; a vending machine stocks, takes money and
+  // dispenses. Both are "one class doing several jobs" when they collapse.
+  const allocationLine = findLine(skeleton, /assign|allocat|findspot|park\w*\(|reserve|select/i);
+  const pricingLine = findLine(
+    skeleton,
+    /fee|price|charge|cost|bill|payment|pay\(|coin|note|money|refund|change/i,
+  );
+  const ticketLine = findLine(skeleton, /ticket|dispense|deliver|vend|issue/i);
+  const inventoryLine = findLine(skeleton, /stock|inventory|spots?\b|products?\b|slots?\b/i);
   const vehicleTypeLine = findLine(skeleton, /vehicletype|cartype|enum\s+\w*(vehicle|spot|size)/i);
 
-  const concernCount = [allocationLine, pricingLine, ticketLine].filter(Boolean).length;
+  // Booleans standing in for a state machine - the canonical vending machine
+  // mistake, and invisible to a rule that only knows about parking lots.
+  const booleanStateLine = findLine(
+    skeleton,
+    /\b(?:boolean|bool)\s+(?:is|has|can)[A-Z_]|\bis[A-Z]\w*\s*(?:=|;)|\bstat(?:e|us)\s*(?:=|;)/,
+  );
+
+  const concernCount = [allocationLine, pricingLine, ticketLine, inventoryLine].filter(
+    Boolean,
+  ).length;
 
   return {
     isEmpty:
@@ -158,7 +178,9 @@ function readSubmission(sections: {
     allocationLine,
     pricingLine,
     ticketLine,
+    inventoryLine,
     vehicleTypeLine,
+    booleanStateLine,
     concernCount,
   };
 }
@@ -202,27 +224,84 @@ function godClassFinding(
   if (reading.typeNames.length !== 1 || reading.concernCount < 2) return null;
 
   const owner = reading.typeNames[0] ?? 'the single class';
-  const evidence = reading.pricingLine ?? reading.allocationLine;
+
+  // Prefer a method line over a field declaration: quoting behaviour makes the
+  // point about responsibilities far better than quoting state.
+  const evidence =
+    [reading.pricingLine, reading.allocationLine, reading.ticketLine].find(
+      (line) => line !== null && line.includes('('),
+    ) ??
+    reading.pricingLine ??
+    reading.allocationLine;
   if (!evidence) return null;
+
+  const jobs = describeConcerns(reading);
 
   return {
     dimensionId: dimensions.COHESION,
     severity: Severity.CRITICAL,
     category: FeedbackCategory.COHESION,
     evidence,
-    issue:
-      `${owner} carries every responsibility in the design: it allocates spots, ` +
-      `issues tickets and calculates charges.`,
+    issue: `${owner} carries every responsibility in the design: it ${jobs}.`,
     whyItMatters:
       `Those responsibilities change for different reasons and on different ` +
-      `schedules. A new pricing rule and a new allocation policy would both edit ` +
-      `${owner}, so unrelated changes collide in one file and each one risks the other.`,
+      `schedules. Two unrelated changes would both edit ${owner}, so they collide ` +
+      `in one file and each one risks the other.`,
     suggestion:
-      `Split by reason to change: a SpotAllocator that owns assignment, and a ` +
-      `separate collaborator that owns pricing. ${owner} then coordinates them ` +
-      `rather than implementing them.`,
+      `Split by reason to change: give each job its own collaborator, and let ` +
+      `${owner} coordinate them rather than implement them. Ask of each method ` +
+      `"what would have to change in the world for this to need editing?" - ` +
+      `methods with different answers belong in different types.`,
     principle: 'Single Responsibility Principle',
     pattern: null,
+  };
+}
+
+/** Names the responsibility families actually detected, so the issue text is true. */
+function describeConcerns(reading: SubmissionReading): string {
+  const jobs: string[] = [];
+
+  if (reading.inventoryLine) jobs.push('holds inventory');
+  if (reading.allocationLine) jobs.push('decides what to hand out');
+  if (reading.pricingLine) jobs.push('handles money');
+  if (reading.ticketLine) jobs.push('performs the delivery');
+
+  if (jobs.length <= 1) return 'holds every job in the flow';
+  return `${jobs.slice(0, -1).join(', ')} and ${jobs.at(-1)}`;
+}
+
+/**
+ * Booleans used where a state machine belongs.
+ *
+ * The classic vending machine mistake, and one that gets worse rather than
+ * better as the design grows: each new situation multiplies the combinations
+ * of flags, most of which are unreachable and none of which are named.
+ */
+function booleanStateFinding(
+  reading: SubmissionReading,
+  dimensions: DimensionIds,
+): FeedbackItemPayload | null {
+  if (!reading.booleanStateLine) return null;
+
+  return {
+    dimensionId: dimensions.EXTENSIBILITY,
+    severity: Severity.MAJOR,
+    category: FeedbackCategory.ABSTRACTION,
+    evidence: reading.booleanStateLine,
+    issue:
+      'The situation the machine is in is tracked with boolean flags rather than ' +
+      'modelled as a state in its own right.',
+    whyItMatters:
+      'Flags multiply. Three booleans describe eight combinations, most of which are ' +
+      'unreachable, and nothing in the design says which ones are legal. Every method ' +
+      'then has to re-derive where it is before it can act, and an illegal combination ' +
+      'is a bug rather than something the type system refuses.',
+    suggestion:
+      'Make each situation an explicit state that owns the transitions legal from it, ' +
+      'so an illegal move has nowhere to be expressed rather than being guarded against ' +
+      'in every method.',
+    principle: null,
+    pattern: 'State',
   };
 }
 
@@ -237,14 +316,17 @@ function hardWiredPricingFinding(
     severity: Severity.MAJOR,
     category: FeedbackCategory.EXTENSIBILITY,
     evidence: reading.pricingLine,
-    issue: 'Fee calculation is written directly into a concrete class with no abstraction behind it.',
+    issue:
+      'The rule for handling money is written directly into a concrete class, with no ' +
+      'abstraction behind it.',
     whyItMatters:
-      'Pricing is the part of a parking lot most likely to change - weekend rates, ' +
-      'EV charging, season passes. Each new rule means editing this method rather ' +
-      'than adding a type alongside it, so the class grows a branch per variation.',
+      'Money handling is almost always the first thing an operator asks to change - a ' +
+      'new rate, a new payment method, a promotion. With the rule inlined, each variation ' +
+      'means editing this class and adding another branch, so the method grows a case per ' +
+      'rule and every change risks the ones already there.',
     suggestion:
-      'Put pricing behind a FeeStrategy interface with one implementation per rule, ' +
-      'and have the lot depend on the interface.',
+      'Name the axis that varies and put it behind an interface with one implementation ' +
+      'per rule, so a new rule is a new type rather than an edit to this one.',
     principle: 'Open/Closed Principle',
     pattern: 'Strategy',
   };

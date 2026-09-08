@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { FeedbackCategory, Severity, type Submission } from '../../domain';
+import { buildVendingMachineProblem } from '../../seed/vendingMachine';
 import {
+  booleanStateVendingMachine,
   buildTestProblem,
   DIMENSION_IDS,
   emptySubmission,
@@ -142,6 +144,39 @@ describe('MockLlmClient', () => {
     const raw = await client.complete(promptBuilder.build(context));
 
     expect(parseLlmEvaluationPayloadFromText(raw).ok).toBe(true);
+  });
+
+  it('has something to say about the vending machine, not just the parking lot', () => {
+    // Regression guard. The first version of these rules only knew about
+    // vehicles, spots and fees, so a God-class vending machine with boolean
+    // state flags - the canonical mistake for that problem - drew 60/100 and
+    // zero findings. A seeded problem the default evaluator is silent on is a
+    // broken demo, not a lenient one.
+    const context = new EvaluationContext({
+      problem: buildVendingMachineProblem(),
+      submission: booleanStateVendingMachine(),
+      attemptNumber: 1,
+    });
+
+    const payload = client.buildPayload(promptBuilder.build(context));
+
+    expect(payload.feedback.length).toBeGreaterThan(0);
+    expect(payload.dimensionScores.every((score) => score.score <= 3)).toBe(true);
+  });
+
+  it('names the State pattern when booleans stand in for a state machine', () => {
+    const context = new EvaluationContext({
+      problem: buildVendingMachineProblem(),
+      submission: booleanStateVendingMachine(),
+      attemptNumber: 1,
+    });
+
+    const payload = client.buildPayload(promptBuilder.build(context));
+    const stateIssue = payload.feedback.find((item) => item.pattern === 'State');
+
+    expect(stateIssue).toBeDefined();
+    expect(stateIssue?.evidence).toMatch(/boolean|isDispensing/i);
+    expect(stateIssue?.whyItMatters).toMatch(/combination|multiply/i);
   });
 
   it('scores every dimension the rubric defines, exactly once', () => {
