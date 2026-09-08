@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { FeedbackCategory, Severity, type Submission } from '../../domain';
+import { FeedbackCategory, Severity, Submission } from '../../domain';
 import { buildVendingMachineProblem } from '../../seed/vendingMachine';
 import {
   booleanStateVendingMachine,
@@ -177,6 +177,48 @@ describe('MockLlmClient', () => {
     expect(stateIssue).toBeDefined();
     expect(stateIssue?.evidence).toMatch(/boolean|isDispensing/i);
     expect(stateIssue?.whyItMatters).toMatch(/combination|multiply/i);
+  });
+
+  it('refuses to score gibberish as a competent design', () => {
+    // Regression guard for a real defect. The rules below are subtractive: they
+    // start from a competent baseline and deduct for problems they recognise. A
+    // submission they recognise nothing in therefore landed on the baseline
+    // untouched, and random characters scored 60/100 with "no specific issues
+    // were raised" - while the structural pass had already reported no classes,
+    // no methods and a skeleton too short to describe a design.
+    //
+    // Absence of recognised problems is not evidence of quality.
+    const payload = payloadFor(
+      Submission.create({
+        designSkeleton: 'lfkd jdklasfj lksdjfsd jflkdsjf lksdjf sldkjf lkdsj fld',
+        designDecisions: 'jdskhfkd fldsjf lkdsj flkdj flkdjs flk d',
+        assumptions: 'jdks hfkldsf jdj flkdsj flsjdf lksdj fsd sdaf',
+      }),
+    );
+
+    expect(payload.dimensionScores.every((score) => score.score === 0)).toBe(true);
+    expect(payload.strengths).toHaveLength(0);
+    expect(payload.feedback).toHaveLength(1);
+    expect(payload.feedback[0]?.severity).toBe(Severity.CRITICAL);
+    expect(payload.feedback[0]?.category).toBe(FeedbackCategory.INSUFFICIENT_DETAIL);
+  });
+
+  it('never claims a score is unearned while awarding it anyway', () => {
+    // The same defect produced self-contradicting output: "responsibilities are
+    // not separated at all. Scored 3/5." A justification that argues against its
+    // own number destroys the credibility of every other number on the page.
+    const payload = payloadFor(
+      Submission.create({
+        designSkeleton: 'some words that describe nothing in particular at all',
+        designDecisions: 'more words',
+        assumptions: 'and more words here to pad the field out past the length floor',
+      }),
+    );
+
+    for (const score of payload.dimensionScores) {
+      expect(score.justification).not.toMatch(/not separated at all\. Scored [1-9]/);
+      expect(score.justification).not.toMatch(/0 of the three core flows.*Scored [1-9]/);
+    }
   });
 
   it('scores every dimension the rubric defines, exactly once', () => {

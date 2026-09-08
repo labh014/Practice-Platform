@@ -72,8 +72,19 @@ export interface SkeletonAnalysis {
  * learner wrote.
  */
 export function analyseSkeleton(submission: Submission): SkeletonAnalysis {
-  const text = submission.designSkeleton;
+  return analyseSkeletonText(submission.designSkeleton);
+}
 
+/**
+ * The same analysis over raw text.
+ *
+ * Exists so the MockLlmClient, which only ever sees a prompt, reads the
+ * submission through exactly the same detection the structural pass used. When
+ * the two had separate notions of what counts as a class, the deterministic pass
+ * could report "no classes found" while the evaluator scored the submission as a
+ * competent design - which is precisely what happened.
+ */
+export function analyseSkeletonText(text: string): SkeletonAnalysis {
   const typeNames = unique(matchGroup(text, TYPE_DECLARATION_PATTERN));
   const declaredTypes = new Set(typeNames);
 
@@ -89,7 +100,7 @@ export function analyseSkeleton(submission: Submission): SkeletonAnalysis {
   return {
     typeNames,
     methodNames,
-    nonEmptyLineCount: submission.designSkeletonLineCount,
+    nonEmptyLineCount: text.split('\n').filter((line) => line.trim().length > 0).length,
   };
 }
 

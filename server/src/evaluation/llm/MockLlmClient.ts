@@ -1,4 +1,5 @@
 import { FeedbackCategory, MAX_DIMENSION_SCORE, Severity } from '../../domain';
+import { analyseSkeletonText } from '../evaluators/structuralChecks';
 import type { LlmPrompt } from '../prompt/LlmPrompt';
 import { extractDimensionIds, extractSubmissionSections } from '../prompt/promptMarkers';
 import type {
@@ -63,6 +64,14 @@ export class MockLlmClient implements LlmClient {
       return emptySubmissionPayload(dimensions);
     }
 
+    // Text was submitted, but nothing in it describes a design. This has to be
+    // its own case rather than falling through to the rules below, because those
+    // rules only ever subtract from a competent baseline - so a submission they
+    // cannot recognise at all would score as competent by default.
+    if (reading.hasNoIdentifiableDesign) {
+      return notADesignPayload(dimensions, reading);
+    }
+
     const feedback = [
       godClassFinding(reading, dimensions),
       booleanStateFinding(reading, dimensions),
@@ -120,6 +129,12 @@ interface SubmissionReading {
   readonly decisions: string;
   readonly assumptions: string;
   readonly typeNames: readonly string[];
+  readonly methodNames: readonly string[];
+  /**
+   * Text was submitted, but it declares no types and defines no methods.
+   * Nothing here can be assessed as a design.
+   */
+  readonly hasNoIdentifiableDesign: boolean;
   readonly hasAbstraction: boolean;
   readonly allocationLine: string | null;
   readonly pricingLine: string | null;
@@ -131,16 +146,16 @@ interface SubmissionReading {
   readonly concernCount: number;
 }
 
-const TYPE_PATTERN =
-  /^[ \t]*(?:(?:public|private|protected|abstract|final|sealed|static|export|open|data)\s+)*(?:class|interface|enum|record|struct|trait|protocol)\s+([A-Za-z_$][\w$]*)/gim;
-
 function readSubmission(sections: {
   designSkeleton: string;
   designDecisions: string;
   assumptions: string;
 }): SubmissionReading {
   const skeleton = sections.designSkeleton;
-  const typeNames = matchAll(skeleton, TYPE_PATTERN);
+
+  // Same detection the structural pass used, so the two can never disagree
+  // about whether the submission contains a design.
+  const { typeNames, methodNames } = analyseSkeletonText(skeleton);
 
   // Responsibility families, written broadly enough to read both seeded problems.
   // A parking lot allocates and prices; a vending machine stocks, takes money and
@@ -170,10 +185,12 @@ function readSubmission(sections: {
       skeleton.trim().length === 0 &&
       sections.designDecisions.trim().length === 0 &&
       sections.assumptions.trim().length === 0,
+    hasNoIdentifiableDesign: typeNames.length === 0 && methodNames.length === 0,
     skeleton,
     decisions: sections.designDecisions,
     assumptions: sections.assumptions,
     typeNames,
+    methodNames,
     hasAbstraction: /\b(interface|abstract\s+class|trait|protocol)\b/i.test(skeleton),
     allocationLine,
     pricingLine,
@@ -183,19 +200,6 @@ function readSubmission(sections: {
     booleanStateLine,
     concernCount,
   };
-}
-
-function matchAll(text: string, pattern: RegExp): string[] {
-  const local = new RegExp(pattern.source, pattern.flags);
-  const found: string[] = [];
-
-  let match = local.exec(text);
-  while (match !== null) {
-    if (match[1]) found.push(match[1]);
-    match = local.exec(text);
-  }
-
-  return [...new Set(found)];
 }
 
 /**
@@ -477,9 +481,11 @@ function justify(
 
   const bases: Record<DimensionRole, string> = {
     COHESION:
-      typeCount <= 1
-        ? 'The design is held in a single type, so responsibilities are not separated at all.'
-        : `Responsibilities are spread across ${typeCount} types, and the split follows the problem's natural boundaries.`,
+      typeCount === 0
+        ? 'No types were declared, so there are no responsibilities to separate.'
+        : typeCount === 1
+          ? 'The design is held in a single type, so responsibilities are not separated at all.'
+          : `Responsibilities are spread across ${typeCount} types, and the split follows the problem's natural boundaries.`,
     COUPLING: reading.hasAbstraction
       ? 'At least one dependency points at an interface rather than a concrete type.'
       : 'Every dependency in the design is on a concrete type.',
@@ -498,6 +504,11 @@ function justify(
 }
 
 function strengthsFor(reading: SubmissionReading): string[] {
+  // No design, no strengths. Crediting "scope is stated explicitly" because the
+  // assumptions field passed a length check is how a submission of random
+  // characters ends up with something in its "what worked" list.
+  if (reading.hasNoIdentifiableDesign) return [];
+
   const strengths: string[] = [];
 
   if (reading.hasAbstraction) {
@@ -556,6 +567,66 @@ function tradeOffsFor(reading: SubmissionReading): TradeOffPayload[] {
 
 function clamp(score: number): number {
   return Math.max(0, Math.min(MAX_DIMENSION_SCORE, Math.round(score)));
+}
+
+/**
+ * A submission containing text but no design.
+ *
+ * Distinct from empty, and scored near the floor rather than at it: something
+ * was written, it simply cannot be read as classes, interfaces or behaviour.
+ *
+ * This case exists because the rules above are subtractive - they start from a
+ * competent baseline and deduct for problems they recognise. A submission they
+ * recognise nothing in therefore lands on the baseline untouched, which is how
+ * random characters scored 60/100 and drew "no specific issues were raised".
+ * Absence of recognised problems is not evidence of quality.
+ */
+function notADesignPayload(
+  dimensions: DimensionIds,
+  reading: SubmissionReading,
+): LlmEvaluationPayload {
+  const evidence = firstNonEmptyLine(reading.skeleton) ?? reading.skeleton.trim().slice(0, 80);
+
+  return {
+    dimensionScores: DIMENSION_ROLES.map((role) => ({
+      dimensionId: dimensions[role],
+      score: 0,
+      justification:
+        'The submission does not contain a design that can be assessed: no classes, ' +
+        'interfaces or methods could be identified in it.',
+    })),
+    strengths: [],
+    feedback: [
+      {
+        dimensionId: dimensions.COMPLETENESS,
+        severity: Severity.CRITICAL,
+        category: FeedbackCategory.INSUFFICIENT_DETAIL,
+        evidence,
+        issue:
+          'Nothing in the design skeleton reads as a design. No classes, interfaces or ' +
+          'methods could be identified.',
+        whyItMatters:
+          'Every dimension here judges structure - which types exist, what each one is ' +
+          'responsible for, and where the boundaries fall. With no structure to read, ' +
+          'there is nothing to assess and nothing specific to tell you.',
+        suggestion:
+          'Start from the nouns in the requirements and give each one a class. Add the ' +
+          'methods each class would need, leaving the bodies empty. Then, for every ' +
+          'boundary you drew, write the sentence explaining why it sits there.',
+        principle: null,
+        pattern: null,
+      },
+    ],
+    tradeOffs: [],
+  };
+}
+
+/** First line with anything on it, so evidence quotes real submitted text. */
+function firstNonEmptyLine(text: string): string | null {
+  for (const line of text.split('\n')) {
+    if (line.trim().length > 0) return line.trim();
+  }
+  return null;
 }
 
 function emptySubmissionPayload(dimensions: DimensionIds): LlmEvaluationPayload {
