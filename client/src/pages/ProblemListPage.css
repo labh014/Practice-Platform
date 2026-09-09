@@ -1,57 +1,217 @@
 .catalogue {
-  max-width: 880px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 56px 24px 80px;
+  padding: 56px 24px 96px;
 }
 
 .catalogue__intro {
-  margin-bottom: 32px;
+  margin-bottom: 28px;
+}
+
+.catalogue__eyebrow {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
 }
 
 .catalogue__title {
-  font-size: 26px;
+  font-size: 30px;
   letter-spacing: -0.02em;
 }
 
 .catalogue__lede {
-  margin-top: 8px;
-  max-width: 60ch;
+  margin-top: 10px;
+  max-width: 62ch;
   color: var(--text-muted);
-  font-size: 14.5px;
+  font-size: 15px;
+}
+
+.catalogue__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 24px 0 0;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.catalogue__stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.catalogue__stats dt {
+  color: var(--text-subtle);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.catalogue__stats dd {
+  margin: 0;
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.catalogue__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0 20px;
+}
+
+.catalogue__filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+
+.catalogue__filter:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.catalogue__filter.is-active {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.catalogue__filter-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.catalogue__filter-count {
+  color: var(--text-subtle);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.catalogue__filter.is-active .catalogue__filter-count {
+  color: inherit;
+  opacity: 0.75;
+}
+
+.catalogue__empty {
+  padding: 40px 20px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+  font-size: 13.5px;
 }
 
 .catalogue__grid {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 14px;
 }
 
 .problem-card {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 20px;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
+  padding: 0;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .problem-card:hover {
   border-color: var(--border-strong);
   box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.problem-card__stripe {
+  width: 3px;
+  flex-shrink: 0;
+  align-self: stretch;
+  opacity: 0.85;
+}
+
+.problem-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  padding: 20px 20px 18px;
 }
 
 .problem-card__head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
 }
 
+.problem-card__title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
 .problem-card__title {
-  font-size: 16.5px;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+
+.problem-card__category {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .problem-card__summary {
-  max-width: 68ch;
+  max-width: 60ch;
   font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.problem-card__focus {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.problem-card__focus-label {
+  color: var(--text-subtle);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .problem-card__foot {
@@ -59,15 +219,50 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 4px;
-  padding-top: 12px;
+  margin-top: auto;
+  padding-top: 14px;
   border-top: 1px solid var(--border);
   font-size: 12.5px;
 }
 
+.problem-card__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.problem-card__difficulty {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--border);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+
+.problem-card__difficulty--easy {
+  background: var(--improved-soft);
+  color: var(--improved);
+  border-color: transparent;
+}
+
+.problem-card__difficulty--medium {
+  background: var(--major-soft);
+  color: var(--major);
+  border-color: transparent;
+}
+
+.problem-card__difficulty--hard {
+  background: var(--critical-soft);
+  color: var(--critical);
+  border-color: transparent;
+}
+
 .problem-card__cta {
-  color: var(--accent);
-  font-weight: 500;
+  color: var(--card-accent, var(--accent));
+  font-weight: 600;
 }
 
 .problem-card__new {
@@ -87,22 +282,31 @@
   align-items: baseline;
   gap: 4px;
   font-size: 12px;
+  white-space: nowrap;
 }
 
 .problem-card__score-value {
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 650;
   letter-spacing: -0.02em;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
   .catalogue {
     padding: 32px 16px 64px;
+  }
+
+  .catalogue__title {
+    font-size: 24px;
+  }
+
+  .catalogue__grid {
+    grid-template-columns: 1fr;
   }
 
   .problem-card__foot {
     flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
+    gap: 8px;
   }
 }

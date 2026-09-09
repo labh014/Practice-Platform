@@ -7,9 +7,36 @@ import { DimensionMeta } from './rubricDimensions';
 
 const problems = buildSeedProblems();
 
+/**
+ * Domain-specific words each problem's rubric text is required to mention.
+ *
+ * The point of the check below is that band text must be concrete about *this*
+ * problem's vocabulary - generic phrases like "well-separated" measure nothing.
+ * When a new problem is seeded, its vocabulary goes here.
+ */
+const DOMAIN_WORDS_BY_ID: Record<string, string[]> = {
+  'parking-lot': ['spot', 'ticket', 'pricing', 'allocation'],
+  'vending-machine': ['stock', 'payment', 'change', 'state'],
+  'elevator-system': ['car', 'dispatch', 'motion', 'transition'],
+  splitwise: ['split', 'expense', 'balance', 'rule'],
+  'rate-limiter': ['algorithm', 'storage', 'rule', 'limit'],
+  'notification-service': ['channel', 'template', 'event', 'preference'],
+  'in-memory-cache': ['eviction', 'ttl', 'policy', 'storage'],
+};
+
 describe('seeded problem catalogue', () => {
-  it('seeds the two problems the PRD names', () => {
-    expect(problems.map((problem) => problem.id)).toEqual(['parking-lot', 'vending-machine']);
+  it('leads with the two problems the PRD names', () => {
+    // The catalogue can grow, but Parking Lot and Vending Machine are the
+    // canonical seeds and stay at the top of the list.
+    expect(problems.slice(0, 2).map((problem) => problem.id)).toEqual([
+      'parking-lot',
+      'vending-machine',
+    ]);
+  });
+
+  it('gives every seeded problem a unique id', () => {
+    const ids = problems.map((problem) => problem.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it('constructs without violating any domain invariant', () => {
@@ -59,12 +86,10 @@ describe('seeded problem catalogue', () => {
       .join(' ')
       .toLowerCase();
 
-    const domainWords =
-      problem.id === 'parking-lot'
-        ? ['spot', 'ticket', 'pricing', 'allocation']
-        : ['stock', 'payment', 'change', 'state'];
+    const domainWords = DOMAIN_WORDS_BY_ID[problem.id];
+    expect(domainWords, `no domain-word list registered for ${problem.id}`).toBeDefined();
 
-    for (const word of domainWords) {
+    for (const word of domainWords!) {
       expect(allBandText).toContain(word);
     }
   });
@@ -113,7 +138,7 @@ describe('InMemoryProblemRepository', () => {
   const repository = new InMemoryProblemRepository();
 
   it('lists the seeded problems', async () => {
-    expect(await repository.findAll()).toHaveLength(2);
+    expect(await repository.findAll()).toHaveLength(problems.length);
   });
 
   it('finds a problem by id', async () => {
@@ -124,7 +149,7 @@ describe('InMemoryProblemRepository', () => {
   });
 
   it('returns null for an unknown id rather than throwing', async () => {
-    expect(await repository.findById('elevator')).toBeNull();
+    expect(await repository.findById('does-not-exist')).toBeNull();
   });
 
   it('orders requirements HIGH first for display', async () => {
