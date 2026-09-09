@@ -9,6 +9,12 @@ choose a problem → write a design → submit → evidence-backed feedback
         └──────────── revise ←──── see what moved ────┘
 ```
 
+**Live:** https://lld-practice-szip.onrender.com
+
+> Hosted on Render's free tier, which sleeps when idle. The first request after
+> a quiet period takes **30–50 seconds** to wake — it is not broken, just cold.
+> Storage is in memory, so a wake also clears any previous attempts.
+
 ## Run it
 
 ```bash
@@ -77,19 +83,28 @@ design; the platform supplies the arithmetic and the guarantees.**
 
 ## Key decisions
 
-**Change scenario probes one dimension, not a sixth requirement.** The PRD
-reveals "add EV charging" after attempt 1 *and* asks attempt 2 what improved.
-Those conflict — graded as a new requirement, you could improve and score
-*lower*. It feeds Extensibility only, marked **bar raised** and excluded from
-the regression count.
+Numbered, because code comments cite them.
 
-**Score and delta are computed, never generated.** The Zod schema has no
-`overallScore` field, so a model returning one is rejected. A model left to
+**A1 — The change scenario probes one dimension, not a sixth requirement.** The
+PRD reveals "add EV charging" after attempt 1 *and* asks attempt 2 what
+improved. Those conflict — graded as a new requirement, you could improve and
+score *lower*. It feeds Extensibility only, marked **bar raised** and excluded
+from the regression count.
+
+**A2 / A3 — Score and delta are computed, never generated.** The Zod schema has
+no `overallScore` field, so a model returning one is rejected. A model left to
 author its own total will return 78 alongside scores of 2, 2, 3, 3. A model
 asked whether you improved will say yes.
 
-**Evidence is verified, not requested.** Dropping a real criticism costs one
-piece of advice; critiquing a class you never wrote costs all credibility.
+**A4 — Evidence is verified, not requested.** Dropping a real criticism costs
+one piece of advice; critiquing a class you never wrote costs all credibility.
+
+**A5 — One schema-repair retry, then fail.** Models break the schema on trivia;
+one corrective nudge fixes most. More would waste time on a model that has
+misunderstood the task.
+
+**A10 — Structural findings live on the `Attempt`, not the result.** So they
+survive a failed evaluation and the learner still sees something.
 
 **Duplicate requests return the in-flight attempt.** A double-click would
 otherwise leave a phantom entry in a history meant to record how your thinking
@@ -97,9 +112,6 @@ changed.
 
 **Empty submissions are evaluated, not rejected.** A scored explanation of why
 nothing scores nothing teaches more than a 400.
-
-Numbered A1–A12 in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md), which the
-code comments cite.
 
 ---
 
