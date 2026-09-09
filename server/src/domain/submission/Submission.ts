@@ -92,6 +92,21 @@ export class Submission {
       .join('\n\n');
   }
 
+  /**
+   * Value equality across all three fields.
+   *
+   * A Submission has no identity of its own - two submissions with the same
+   * text are the same submission - so equality belongs here rather than being
+   * re-derived by callers. Used to recognise a resubmitted request.
+   */
+  equals(other: Submission): boolean {
+    return (
+      this.designSkeleton === other.designSkeleton &&
+      this.designDecisions === other.designDecisions &&
+      this.assumptions === other.assumptions
+    );
+  }
+
   get totalCharacterCount(): number {
     return this.designSkeleton.length + this.designDecisions.length + this.assumptions.length;
   }

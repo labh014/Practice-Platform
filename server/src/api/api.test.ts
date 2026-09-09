@@ -244,6 +244,55 @@ describe('POST /api/attempts', () => {
   });
 });
 
+describe('duplicate submissions', () => {
+  it('returns the in-flight attempt instead of creating a second one', async () => {
+    // A double-clicked button, or a retried request. Both arrive while the first
+    // attempt is still pending. A second attempt would spend a second evaluation
+    // on identical text and leave a phantom entry in the learner's history.
+    const body = {
+      problemId: 'parking-lot',
+      designSkeleton: godClassSubmission().designSkeleton,
+      designDecisions: godClassSubmission().designDecisions,
+      assumptions: godClassSubmission().assumptions,
+    };
+
+    const first = await request(app).post('/api/attempts').send(body).expect(202);
+    const second = await request(app).post('/api/attempts').send(body).expect(202);
+
+    expect(second.body.attemptId).toBe(first.body.attemptId);
+    expect(second.body.attemptNumber).toBe(1);
+
+    await dispatcher.drain();
+
+    const history = await request(app)
+      .get('/api/problems/parking-lot/attempts?userId=learner_1')
+      .expect(200);
+
+    expect(history.body).toHaveLength(1);
+  });
+
+  it('treats a different submission as a new attempt', async () => {
+    await submit();
+    const different = await request(app)
+      .post('/api/attempts')
+      .send({ problemId: 'parking-lot', designSkeleton: 'class Other { go() {} }' })
+      .expect(202);
+
+    expect(different.body.attemptNumber).toBe(2);
+  });
+
+  it('treats the same design resubmitted after feedback as a new attempt', async () => {
+    // Not a duplicate request. Resubmitting identical text after reading the
+    // feedback is a deliberate act, and the learner is entitled to a new attempt.
+    const first = await submit();
+    await dispatcher.drain();
+
+    const again = await submit();
+
+    expect(again).not.toBe(first);
+  });
+});
+
 describe('GET /api/attempts/:attemptId', () => {
   it('returns the full evaluation once it completes', async () => {
     const attemptId = await submit();

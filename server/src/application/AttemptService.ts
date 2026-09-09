@@ -67,6 +67,9 @@ export class AttemptService {
       assumptions: command.assumptions,
     });
 
+    const inFlight = await this.findInFlightDuplicate(problem.id, command.userId, submission);
+    if (inFlight) return inFlight;
+
     const attempt = new Attempt({
       id: randomUUID(),
       problemId: problem.id,
@@ -113,6 +116,35 @@ export class AttemptService {
   async listForProblem(problemId: ProblemId, userId: UserId): Promise<Attempt[]> {
     await this.requireProblem(problemId);
     return this.attempts.findByProblemAndUser(problemId, userId);
+  }
+
+  /**
+   * The same submission, already submitted and still being evaluated.
+   *
+   * A double-clicked button or a retried request arrives milliseconds after the
+   * first, while that attempt is still SUBMITTED or EVALUATING. Creating a
+   * second attempt would spend a second evaluation on identical text and, worse,
+   * put a phantom entry in the learner's history - which is meant to be a record
+   * of how their thinking changed, not of how many times they clicked.
+   *
+   * Deliberately scoped to attempts still in flight. Resubmitting the same
+   * design after reading its feedback is a real thing a learner might do - to
+   * see whether the evaluator agrees with itself, say - and that is a new
+   * attempt, not a duplicate request.
+   */
+  private async findInFlightDuplicate(
+    problemId: ProblemId,
+    userId: UserId,
+    submission: Submission,
+  ): Promise<Attempt | null> {
+    const existing = await this.attempts.findByProblemAndUser(problemId, userId);
+    const latest = existing.at(-1);
+
+    if (latest && latest.isPending && latest.submission.equals(submission)) {
+      return latest;
+    }
+
+    return null;
   }
 
   /**

@@ -25,7 +25,7 @@ offline evaluator and the whole loop works with no network and no cost.
 |---|---|
 | Client | http://localhost:5173 |
 | API | http://localhost:4000/api |
-| Tests | `npm test` — 204 tests, no network |
+| Tests | `npm test` — 207 tests, no network |
 | Typecheck | `npm run typecheck` |
 
 Node 20+ required.
@@ -165,6 +165,13 @@ submission. `GET /api/problems/:id` — the workspace must survive a refresh.
 **Empty submissions are accepted and evaluated.** A scored explanation of why
 nothing scores nothing teaches more than a 400 does.
 
+**A resubmitted request returns the attempt already in flight.** A double-click
+would otherwise spend a second evaluation on identical text and leave a phantom
+entry in the history, which is meant to record how the learner's thinking
+changed rather than how many times they clicked. Scoped to attempts still
+pending — resubmitting the same design *after* reading its feedback is a
+deliberate act and gets a new attempt.
+
 ---
 
 ## Deviations from the spec
@@ -204,10 +211,29 @@ hand you the answer to what it measures.
 
 ---
 
+## If it grew
+
+**The evaluation worker is the first thing I would separate.** It is the only
+part that is slow, that fails for reasons outside the request, and that needs to
+scale on a different axis from everything else — the API serves reads in
+milliseconds, while an evaluation takes seconds and depends on a third party.
+
+The seam is already there: `POST /api/attempts` stores the submission and
+returns 202, and `AttemptService` hands evaluation to the event loop. Replacing
+`setImmediate` with a queue would touch one method. Attempt state
+(`SUBMITTED → EVALUATING → COMPLETED / FAILED`) is already the contract a worker
+would report against, and the client already polls rather than holding a
+connection open.
+
+Nothing else is close. Two problems and one learner do not justify splitting
+anything else, and a real database would come before a second service.
+
+---
+
 ## Testing
 
 ```bash
-npm test      # 204 tests
+npm test      # 207 tests
 ```
 
 No test touches the network. Coverage sits on the behaviour that matters: domain
@@ -228,6 +254,16 @@ routes through the real stack.
   but it is still not comprehension.
 - **Client API types are hand-mirrored** from the server DTOs rather than shared
   through a third package.
+- **The submission format is not polymorphic.** Adding a new evaluator is one
+  class and one line in `container.ts`. Adding a *diagram* submission alongside
+  text is not: `Submission` is a concrete three-field value object, so it would
+  also touch the structural evaluator and the prompt builder. The evaluation
+  side has the seam; the submission side does not. Acceptable for an MVP with
+  one format, and worth being straight about rather than claiming both are free.
+- **There is no confidence score on findings.** Abstention does that job
+  instead, and does it better: a `null` score states plainly that the evaluator
+  had no basis, where "confidence: 0.4" still shows a number the learner will
+  read as a judgement.
 
 ## Not built
 
