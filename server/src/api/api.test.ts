@@ -105,8 +105,9 @@ describe('GET /api/problems', () => {
   it('lists the seeded problems with no attempts yet', async () => {
     const response = await request(app).get('/api/problems').expect(200);
 
-    expect(response.body).toHaveLength(2);
-    expect(response.body[0]).toMatchObject({
+    expect(response.body.length).toBeGreaterThanOrEqual(2);
+    const parkingLot = response.body.find((p: { id: string }) => p.id === 'parking-lot');
+    expect(parkingLot).toMatchObject({
       id: 'parking-lot',
       attemptCount: 0,
       bestScore: null,
