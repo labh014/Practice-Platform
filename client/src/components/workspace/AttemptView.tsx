@@ -33,7 +33,21 @@ export function AttemptView({
           <h2 className="attempt-view__title">Attempt {attempt.attemptNumber}</h2>
           <p className="subtle attempt-view__meta">
             {statusLabel(attempt.status)} · {formatDate(attempt.createdAt)}
-            {attempt.result ? ` · evaluated by ${attempt.result.evaluatorModel}` : ''}
+            {attempt.result ? (
+              <>
+                {' · '}
+                {/* Which evaluator judged THIS attempt. Kept on the attempt
+                    rather than only in the global banner, because history
+                    outlives configuration: an attempt scored offline stays
+                    offline-scored after a key is added, and its numbers should
+                    not be read as though a model produced them. */}
+                {attempt.result.evaluatorModel === 'mock' ? (
+                  <span className="attempt-view__offline">Offline evaluator</span>
+                ) : (
+                  <>evaluated by {attempt.result.evaluatorModel}</>
+                )}
+              </>
+            ) : null}
           </p>
         </div>
 

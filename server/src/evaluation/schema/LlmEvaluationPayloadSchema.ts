@@ -14,7 +14,9 @@ const severityValues = Object.values(Severity) as [Severity, ...Severity[]];
 const DimensionScorePayloadSchema = z
   .object({
     dimensionId: z.string().min(1),
-    score: z.number().int().min(MIN_DIMENSION_SCORE).max(MAX_DIMENSION_SCORE),
+    // Null means the evaluator declined to judge this dimension. The
+    // justification is still required, so an abstention has to say why.
+    score: z.number().int().min(MIN_DIMENSION_SCORE).max(MAX_DIMENSION_SCORE).nullable(),
     justification: z.string().min(1),
   })
   .strict();

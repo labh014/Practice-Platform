@@ -63,8 +63,10 @@ export function ProgressTrend({ attempts, dimensions }: ProgressTrendProps) {
 
                 return (
                   <td key={attempt.id} className="trend__cell">
-                    {score === undefined ? (
-                      <span className="subtle">–</span>
+                    {score === undefined || score === null ? (
+                      <span className="subtle" title="Not assessed">
+                        –
+                      </span>
                     ) : (
                       <span style={{ color: scoreColour(score) }}>{score}</span>
                     )}

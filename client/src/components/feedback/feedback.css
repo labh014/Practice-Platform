@@ -589,3 +589,31 @@
   border-color: var(--major-border);
   color: var(--major);
 }
+
+/* ------------------------------------------------------------- unassessed */
+
+/* An abstention is shown as itself, not as a zero. "Not assessed" and "0/5"
+   are different claims and the learner is entitled to know which they got. */
+.scorecard__unscored {
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--text-subtle);
+}
+
+.dimension--unassessed {
+  opacity: 0.85;
+}
+
+.dimension__unassessed {
+  margin-left: auto;
+  padding: 1px 8px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 999px;
+  color: var(--text-subtle);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}

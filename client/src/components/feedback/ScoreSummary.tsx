@@ -2,7 +2,7 @@ import { overallScoreColour, scoreColour } from '../../lib/format';
 import type { DimensionScore } from '../../types/api';
 
 interface ScoreSummaryProps {
-  overallScore: number;
+  overallScore: number | null;
   dimensionScores: DimensionScore[];
   evaluatorModel: string;
 }
@@ -15,31 +15,48 @@ interface ScoreSummaryProps {
  * this submission landed there. A score without both is a verdict, and a
  * verdict teaches nothing.
  *
- * The note about how the overall is derived is deliberate too. A learner who
- * can see that 40/100 is four weighted dimension scores, and not an opaque
- * judgement, can argue with the parts they disagree with.
+ * When the evaluator declined to judge, that is shown as itself rather than as
+ * a zero or a hidden row. "Not assessed" and "0/5" are different claims, and
+ * the learner is entitled to know which one they received.
  */
 export function ScoreSummary({
   overallScore,
   dimensionScores,
   evaluatorModel,
 }: ScoreSummaryProps) {
+  const assessed = overallScore !== null;
+
   return (
     <section className="scorecard">
       <header className="scorecard__head">
-        <div className="scorecard__overall">
-          <span
-            className="scorecard__overall-value"
-            style={{ color: overallScoreColour(overallScore) }}
-          >
-            {overallScore}
-          </span>
-          <span className="scorecard__overall-max subtle">/100</span>
-        </div>
+        {assessed ? (
+          <div className="scorecard__overall">
+            <span
+              className="scorecard__overall-value"
+              style={{ color: overallScoreColour(overallScore) }}
+            >
+              {overallScore}
+            </span>
+            <span className="scorecard__overall-max subtle">/100</span>
+          </div>
+        ) : (
+          <div className="scorecard__overall">
+            <span className="scorecard__unscored">Not scored</span>
+          </div>
+        )}
 
         <p className="subtle scorecard__derivation">
-          Weighted from the {dimensionScores.length} dimension scores below, not assigned
-          directly. Evaluated by {evaluatorModel}.
+          {assessed ? (
+            <>
+              Weighted from the {dimensionScores.length} dimension scores below, not assigned
+              directly. Evaluated by {evaluatorModel}.
+            </>
+          ) : (
+            <>
+              No overall score, because {evaluatorModel} declined to judge at least one
+              dimension. A partial total would be a number nobody stood behind.
+            </>
+          )}
         </p>
       </header>
 
@@ -53,34 +70,45 @@ export function ScoreSummary({
 }
 
 function DimensionRow({ score }: { score: DimensionScore }) {
-  const colour = scoreColour(score.score, score.maxScore);
+  const assessed = score.score !== null;
+  const colour = assessed ? scoreColour(score.score as number, score.maxScore) : 'var(--border)';
 
   return (
-    <li className="dimension">
+    <li className={`dimension${assessed ? '' : ' dimension--unassessed'}`}>
       <div className="dimension__head">
         <span className="dimension__name">{score.dimensionName}</span>
         <span className="subtle dimension__weight">{score.weight}%</span>
 
-        <span className="dimension__meter" aria-hidden>
-          {Array.from({ length: score.maxScore }, (_, index) => (
-            <span
-              key={index}
-              className="dimension__pip"
-              style={{ background: index < score.score ? colour : 'var(--border)' }}
-            />
-          ))}
-        </span>
+        {assessed ? (
+          <>
+            <span className="dimension__meter" aria-hidden>
+              {Array.from({ length: score.maxScore }, (_, index) => (
+                <span
+                  key={index}
+                  className="dimension__pip"
+                  style={{
+                    background: index < (score.score as number) ? colour : 'var(--border)',
+                  }}
+                />
+              ))}
+            </span>
 
-        <span className="dimension__score" style={{ color: colour }}>
-          {score.score}
-          <span className="subtle dimension__score-max">/{score.maxScore}</span>
-        </span>
+            <span className="dimension__score" style={{ color: colour }}>
+              {score.score}
+              <span className="subtle dimension__score-max">/{score.maxScore}</span>
+            </span>
+          </>
+        ) : (
+          <span className="dimension__unassessed">Not assessed</span>
+        )}
       </div>
 
       {/* What this score means, taken from the problem's own rubric. */}
-      <p className="dimension__band">{score.bandDescriptor}</p>
+      {assessed && score.bandDescriptor ? (
+        <p className="dimension__band">{score.bandDescriptor}</p>
+      ) : null}
 
-      {/* Why this submission landed there. */}
+      {/* Why this submission landed there — or why nothing could be said. */}
       <p className="dimension__justification">{score.justification}</p>
     </li>
   );

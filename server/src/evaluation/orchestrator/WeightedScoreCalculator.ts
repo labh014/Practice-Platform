@@ -19,10 +19,16 @@ import {
  */
 export class WeightedScoreCalculator {
   /**
-   * @returns an integer in [0, 100].
-   * @throws InvalidScoreError if a rubric dimension was not scored.
+   * @returns an integer in [0, 100], or null when the evaluator declined to
+   *   judge any dimension. A total computed over a partial rubric would be a
+   *   number nobody stood behind, presented with the same confidence as a real
+   *   one - which is the failure this abstention exists to prevent.
+   * @throws InvalidScoreError if a rubric dimension is missing entirely.
    */
-  calculate(dimensionScores: readonly DimensionScore[], rubric: EvaluationRubric): number {
+  calculate(
+    dimensionScores: readonly DimensionScore[],
+    rubric: EvaluationRubric,
+  ): number | null {
     const byId = new Map(dimensionScores.map((score) => [score.dimensionId, score]));
 
     let total = 0;
@@ -36,6 +42,9 @@ export class WeightedScoreCalculator {
             `A partial rubric would produce a total that silently understates the design.`,
         );
       }
+
+      // Declined on any dimension means no defensible overall figure.
+      if (score.ratio === null) return null;
 
       total += score.ratio * dimension.weight;
     }

@@ -82,7 +82,8 @@ export interface DimensionScore {
   dimensionId: string;
   dimensionName: string;
   weight: number;
-  score: number;
+  /** Null when the evaluator declined to judge this dimension. */
+  score: number | null;
   maxScore: number;
   justification: string;
   /** The written standard this score corresponds to. Never show the number alone. */
@@ -133,7 +134,8 @@ export interface ComparisonReport {
 }
 
 export interface EvaluationResult {
-  overallScore: number;
+  /** Null when any dimension was left unassessed; there is no partial total. */
+  overallScore: number | null;
   dimensionScores: DimensionScore[];
   strengths: string[];
   feedback: FeedbackItem[];
@@ -177,7 +179,7 @@ export interface AttemptSummary {
   attemptNumber: number;
   status: AttemptStatus;
   overallScore: number | null;
-  dimensionScores: { dimensionId: string; score: number }[];
+  dimensionScores: { dimensionId: string; score: number | null }[];
   openIssueCount: number;
   createdAt: string;
 }

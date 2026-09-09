@@ -74,7 +74,7 @@ export function toProblemDto(problem: Problem, latestAttemptNumber: number): Pro
 export function toProblemSummaryDto(problem: Problem, attempts: Attempt[]): ProblemSummaryDto {
   const scored = attempts
     .map((attempt) => attempt.result?.overallScore)
-    .filter((score): score is number => score !== undefined);
+    .filter((score): score is number => score !== undefined && score !== null);
 
   return {
     id: problem.id,
@@ -166,7 +166,9 @@ function toDimensionScoreDto(
     score: score.score,
     maxScore: MAX_DIMENSION_SCORE,
     justification: score.justification,
-    bandDescriptor: dimension?.bandFor(score.score).descriptor ?? '',
+    // No band to quote when nothing was scored; the justification carries the
+    // explanation instead.
+    bandDescriptor: score.score === null ? '' : (dimension?.bandFor(score.score).descriptor ?? ''),
   };
 }
 

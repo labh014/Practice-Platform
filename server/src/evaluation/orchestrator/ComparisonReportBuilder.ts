@@ -36,6 +36,7 @@ export class ComparisonReportBuilder {
   build(params: {
     previous: PreviousAttemptSnapshot;
     currentDimensionScores: readonly DimensionScore[];
+    /** Non-null; the orchestrator skips the comparison entirely when unscored. */
     currentOverallScore: number;
     currentFeedback: readonly FeedbackItem[];
     rubric: EvaluationRubric;
@@ -61,7 +62,10 @@ export class ComparisonReportBuilder {
 
       // A dimension missing from either side cannot be compared. Skipping is
       // better than inventing a zero, which would read as a total collapse.
+      // The same applies when either evaluator declined to judge it: there is
+      // no movement to report between a number and an abstention.
       if (!previousScore || !currentScore) continue;
+      if (previousScore.score === null || currentScore.score === null) continue;
 
       dimensionDeltas.push(
         new DimensionDelta({
@@ -87,7 +91,9 @@ export class ComparisonReportBuilder {
     return new ComparisonReport({
       previousAttemptId: previous.attemptId,
       previousAttemptNumber: previous.attemptNumber,
-      previousOverallScore: previous.result.overallScore,
+      // Non-null by the orchestrator's guard: it does not build a comparison
+      // unless both attempts produced a real total.
+      previousOverallScore: previous.result.overallScore ?? 0,
       currentOverallScore,
       dimensionDeltas,
       resolvedDimensionIds: [...previousOpen].filter((id) => !currentOpen.has(id)),

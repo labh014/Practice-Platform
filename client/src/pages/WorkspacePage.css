@@ -562,3 +562,17 @@
 .editor__kbd-sep {
   font-size: 10.5px;
 }
+
+.attempt-view__offline {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border: 1px solid var(--major-border);
+  border-radius: 999px;
+  background: var(--major-soft);
+  color: var(--major);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}

@@ -334,3 +334,46 @@ describe('ComparisonReportBuilder', () => {
     expect(report.persistingDimensionIds).toHaveLength(0);
   });
 });
+
+describe('WeightedScoreCalculator abstention', () => {
+  const calculator = new WeightedScoreCalculator();
+  const rubric = buildTestRubric();
+
+  it('returns null when any dimension was left unassessed', () => {
+    // A total over a partial rubric is a number nobody stood behind, shown with
+    // the same confidence as a real one. That is the failure this prevents.
+    const ids = [
+      DIMENSION_IDS.COHESION,
+      DIMENSION_IDS.COUPLING,
+      DIMENSION_IDS.COMPLETENESS,
+      DIMENSION_IDS.EXTENSIBILITY,
+    ];
+
+    const scores = ids.map(
+      (dimensionId, index) =>
+        new DimensionScore({
+          dimensionId,
+          score: index === 2 ? null : 4,
+          justification: 'Because.',
+        }),
+    );
+
+    expect(calculator.calculate(scores, rubric)).toBeNull();
+  });
+
+  it('still computes a total when every dimension was assessed', () => {
+    const ids = [
+      DIMENSION_IDS.COHESION,
+      DIMENSION_IDS.COUPLING,
+      DIMENSION_IDS.COMPLETENESS,
+      DIMENSION_IDS.EXTENSIBILITY,
+    ];
+
+    const scores = ids.map(
+      (dimensionId) =>
+        new DimensionScore({ dimensionId, score: 4, justification: 'Because.' }),
+    );
+
+    expect(calculator.calculate(scores, rubric)).toBe(80);
+  });
+});

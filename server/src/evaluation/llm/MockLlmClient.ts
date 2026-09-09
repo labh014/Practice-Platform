@@ -81,8 +81,17 @@ export class MockLlmClient implements LlmClient {
       unexplainedDesignFinding(reading, dimensions),
     ].filter((item): item is FeedbackItemPayload => item !== null);
 
+    const dimensionScores = scoreDimensions(dimensions, reading, feedback);
+
+    // Nothing recognised anywhere. With no finding and no dimension scored the
+    // learner would be shown an empty page, so the abstention itself has to be
+    // said out loud.
+    if (feedback.length === 0 && dimensionScores.every((score) => score.score === null)) {
+      return abstentionPayload(dimensions, reading);
+    }
+
     return {
-      dimensionScores: scoreDimensions(dimensions, reading, feedback),
+      dimensionScores,
       strengths: strengthsFor(reading),
       feedback,
       tradeOffs: tradeOffsFor(reading),
@@ -443,13 +452,28 @@ function scoreDimensions(
   return DIMENSION_ROLES.map((role) => {
     const dimensionId = dimensions[role];
     const items = feedback.filter((item) => item.dimensionId === dimensionId);
+    const bonus = bonuses[role] ?? 0;
+
+    // Abstention is per-dimension, because the rules genuinely know some axes
+    // and not others on the same submission: detecting that no interface exists
+    // says something real about coupling and nothing at all about cohesion.
+    if (items.length === 0 && !hasBasisFor(role, reading)) {
+      return {
+        dimensionId,
+        score: null,
+        justification:
+          'Not assessed. The offline evaluator found nothing it could judge this ' +
+          'dimension on, so it has no basis for a score. This is a limit of the ' +
+          'rule-based evaluator, not a verdict on your design.',
+      };
+    }
 
     const penalty = items.reduce(
       (total, item) => total + (item.severity === Severity.CRITICAL ? 2 : 1),
       0,
     );
 
-    const score = clamp(BASE_SCORE + (bonuses[role] ?? 0) - penalty);
+    const score = clamp(BASE_SCORE + bonus - penalty);
 
     return {
       dimensionId,
@@ -457,6 +481,32 @@ function scoreDimensions(
       justification: justify(role, score, items.length, reading),
     };
   });
+}
+
+/**
+ * Whether the rules have any information about this dimension at all.
+ *
+ * Deliberately distinct from "found a problem" and from "earned a bonus". A
+ * submission can be clean on an axis the evaluator understands - which is worth
+ * a score - or sit on an axis it cannot see, which is not. Collapsing those two
+ * into one check is what let an unexamined baseline pass for a judgement.
+ */
+function hasBasisFor(role: DimensionRole, reading: SubmissionReading): boolean {
+  switch (role) {
+    // Interface presence is readable from any declared type, so this axis is
+    // always assessable once a design exists.
+    case 'COUPLING':
+      return reading.typeNames.length > 0;
+
+    // These are reasoned about from the responsibility families detected. With
+    // none recognised there is nothing to weigh.
+    case 'COHESION':
+    case 'COMPLETENESS':
+      return reading.concernCount > 0;
+
+    case 'EXTENSIBILITY':
+      return reading.concernCount > 0 || reading.hasAbstraction;
+  }
 }
 
 function positiveSignals(
@@ -528,7 +578,11 @@ function strengthsFor(reading: SubmissionReading): string[] {
   if (reading.ticketLine && reading.pricingLine && reading.allocationLine) {
     strengths.push('All three core flows - allocation, ticketing and pricing - are represented.');
   }
-  if (reading.assumptions.trim().length >= 40) {
+  // Stating what you left out is only a strength relative to a scope that
+  // exists. Awarding it on field length alone is how a submission the evaluator
+  // does not understand still collects praise - the same mistake that credited
+  // random characters with explicit scoping.
+  if (reading.concernCount > 0 && reading.assumptions.trim().length >= 40) {
     strengths.push('Scope is stated explicitly, including what was deliberately left out.');
   }
 
@@ -627,6 +681,60 @@ function firstNonEmptyLine(text: string): string | null {
     if (line.trim().length > 0) return line.trim();
   }
   return null;
+}
+
+/**
+ * The offline evaluator declining to judge.
+ *
+ * Its rules recognised nothing here - no problem to report and no strength to
+ * credit - so it has no basis for a number. Emitting the baseline anyway would
+ * hand the learner a score that looks identical to an earned one and that they
+ * have no way to question, and it would go on to contaminate every improvement
+ * comparison built on top of it.
+ *
+ * This is the same discipline the platform applies to evidence, applied to
+ * scores: assert only what can be justified.
+ */
+function abstentionPayload(
+  dimensions: DimensionIds,
+  reading: SubmissionReading,
+): LlmEvaluationPayload {
+  const evidence = firstNonEmptyLine(reading.skeleton) ?? reading.skeleton.trim().slice(0, 80);
+
+  return {
+    dimensionScores: DIMENSION_ROLES.map((role) => ({
+      dimensionId: dimensions[role],
+      score: null,
+      justification:
+        'Not assessed. The offline evaluator recognised no pattern it could judge this ' +
+        'design against, so it has no basis for a score. This is a limit of the ' +
+        'rule-based evaluator, not a verdict on your work.',
+    })),
+    strengths: [],
+    feedback: [
+      {
+        dimensionId: dimensions.COMPLETENESS,
+        severity: Severity.MAJOR,
+        category: FeedbackCategory.INSUFFICIENT_DETAIL,
+        evidence,
+        issue:
+          'The offline evaluator could not assess this design. It matched none of the ' +
+          'patterns it knows, so it declined to score rather than guess.',
+        whyItMatters:
+          'A score it cannot justify would look exactly like one it could, and you would ' +
+          'have no way to tell them apart. It would also feed into the comparison against ' +
+          'your next attempt, making that wrong too.',
+        suggestion:
+          'Configure a real evaluator (set GEMINI_API_KEY in server/.env) for judgement on ' +
+          'any design. If you are staying offline, the rules recognise designs written as ' +
+          'named classes and methods in the language of the problem - spots, tickets, ' +
+          'pricing, stock, payment.',
+        principle: null,
+        pattern: null,
+      },
+    ],
+    tradeOffs: [],
+  };
 }
 
 function emptySubmissionPayload(dimensions: DimensionIds): LlmEvaluationPayload {

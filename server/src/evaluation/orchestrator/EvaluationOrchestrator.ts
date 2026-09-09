@@ -114,7 +114,7 @@ export class EvaluationOrchestrator {
     const verification = this.evidenceVerifier.verify(merged.feedback, submission);
 
     // 4. Derive the headline number.
-    let overallScore: number;
+    let overallScore: number | null;
     try {
       overallScore = this.scoreCalculator.calculate(merged.dimensionScores, problem.rubric);
     } catch (error) {
@@ -126,17 +126,21 @@ export class EvaluationOrchestrator {
     }
 
     // 5. Compare against the previous attempt, if there is one.
-    const comparison = previous
-      ? this.comparisonBuilder.build({
+    //
+    // Both totals have to be real numbers. Comparing against an abstention
+    // would mean inventing the movement the report exists to state as fact.
+    const comparison =
+      previous && overallScore !== null && previous.result.overallScore !== null
+        ? this.comparisonBuilder.build({
           previous,
           currentDimensionScores: merged.dimensionScores,
           currentOverallScore: overallScore,
           currentFeedback: verification.kept,
           rubric: problem.rubric,
-          currentChangeScenarioDimensionId:
-            problem.activeChangeScenarioFor(attemptNumber)?.probesDimensionId ?? null,
-        })
-      : null;
+            currentChangeScenarioDimensionId:
+              problem.activeChangeScenarioFor(attemptNumber)?.probesDimensionId ?? null,
+          })
+        : null;
 
     return {
       ok: true,

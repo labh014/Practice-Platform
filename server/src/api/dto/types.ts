@@ -75,7 +75,8 @@ export interface DimensionScoreDto {
   readonly dimensionId: string;
   readonly dimensionName: string;
   readonly weight: number;
-  readonly score: number;
+  /** Null when the evaluator declined to judge this dimension. */
+  readonly score: number | null;
   readonly maxScore: number;
   readonly justification: string;
   /**
@@ -131,7 +132,8 @@ export interface ComparisonReportDto {
 }
 
 export interface EvaluationResultDto {
-  readonly overallScore: number;
+  /** Null when any dimension was left unassessed; there is no partial total. */
+  readonly overallScore: number | null;
   readonly dimensionScores: readonly DimensionScoreDto[];
   readonly strengths: readonly string[];
   readonly feedback: readonly FeedbackItemDto[];
@@ -176,7 +178,7 @@ export interface AttemptSummaryDto {
   readonly attemptNumber: number;
   readonly status: AttemptStatus;
   readonly overallScore: number | null;
-  readonly dimensionScores: readonly { dimensionId: string; score: number }[];
+  readonly dimensionScores: readonly { dimensionId: string; score: number | null }[];
   readonly openIssueCount: number;
   readonly createdAt: string;
 }

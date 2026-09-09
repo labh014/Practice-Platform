@@ -23,8 +23,16 @@ import type { TradeOff } from './TradeOff';
  * (assumption A3), for the same reason.
  */
 export class EvaluationResult {
-  /** 0-100. Derived, never generated. */
-  readonly overallScore: number;
+  /**
+   * 0-100, derived and never generated - or null when the evaluator declined to
+   * judge one or more dimensions.
+   *
+   * A partial total would be arithmetic on a number nobody stood behind. Saying
+   * "not scored" is the honest output, and it is what stops an unjustified score
+   * flowing into the improvement delta and corrupting the one claim this product
+   * exists to make.
+   */
+  readonly overallScore: number | null;
   readonly dimensionScores: readonly DimensionScore[];
   /** What the learner genuinely did well. Specific, not consolation. */
   readonly strengths: readonly string[];
@@ -39,7 +47,7 @@ export class EvaluationResult {
   private readonly scoresByDimension: ReadonlyMap<DimensionId, DimensionScore>;
 
   constructor(params: {
-    overallScore: number;
+    overallScore: number | null;
     dimensionScores: DimensionScore[];
     strengths: string[];
     feedback: FeedbackItem[];
@@ -50,13 +58,15 @@ export class EvaluationResult {
   }) {
     const { overallScore } = params;
 
-    if (!Number.isFinite(overallScore)) {
-      throw new InvalidScoreError(`Overall score must be a finite number, got ${overallScore}`);
-    }
-    if (overallScore < MIN_OVERALL_SCORE || overallScore > MAX_OVERALL_SCORE) {
-      throw new InvalidScoreError(
-        `Overall score ${overallScore} is outside ${MIN_OVERALL_SCORE}-${MAX_OVERALL_SCORE}`,
-      );
+    if (overallScore !== null) {
+      if (!Number.isFinite(overallScore)) {
+        throw new InvalidScoreError(`Overall score must be a finite number, got ${overallScore}`);
+      }
+      if (overallScore < MIN_OVERALL_SCORE || overallScore > MAX_OVERALL_SCORE) {
+        throw new InvalidScoreError(
+          `Overall score ${overallScore} is outside ${MIN_OVERALL_SCORE}-${MAX_OVERALL_SCORE}`,
+        );
+      }
     }
     if (params.dimensionScores.length === 0) {
       throw new InvalidScoreError('An evaluation result must score at least one dimension');
@@ -83,6 +93,16 @@ export class EvaluationResult {
     this.evaluatorModel = params.evaluatorModel;
     this.evaluatedAt = params.evaluatedAt ?? new Date();
     this.scoresByDimension = scoresByDimension;
+  }
+
+  /** True when the evaluator declined to produce an overall judgement. */
+  get isAssessed(): boolean {
+    return this.overallScore !== null;
+  }
+
+  /** Dimensions the evaluator declined to judge. */
+  get unassessedDimensionIds(): DimensionId[] {
+    return this.dimensionScores.filter((s) => !s.isAssessed).map((s) => s.dimensionId);
   }
 
   scoreFor(dimensionId: DimensionId): DimensionScore | undefined {

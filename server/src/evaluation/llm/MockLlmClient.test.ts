@@ -31,7 +31,7 @@ function payloadFor(submission: Submission, attemptNumber = 1) {
 function scoreOf(
   payload: ReturnType<typeof payloadFor>,
   dimensionId: string,
-): number | undefined {
+): number | null | undefined {
   return payload.dimensionScores.find((score) => score.dimensionId === dimensionId)?.score;
 }
 
@@ -123,7 +123,7 @@ describe('MockLlmClient', () => {
     // is the one most learners will see.
     const payload = payloadFor(wellSeparatedSubmission());
 
-    expect(payload.dimensionScores.every((score) => score.score <= 4)).toBe(true);
+    expect(payload.dimensionScores.every((score) => (score.score ?? 0) <= 4)).toBe(true);
   });
 
   it('acknowledges a trade-off rather than treating every choice as a mistake', () => {
@@ -161,7 +161,7 @@ describe('MockLlmClient', () => {
     const payload = client.buildPayload(promptBuilder.build(context));
 
     expect(payload.feedback.length).toBeGreaterThan(0);
-    expect(payload.dimensionScores.every((score) => score.score <= 3)).toBe(true);
+    expect(payload.dimensionScores.every((score) => (score.score ?? 0) <= 3)).toBe(true);
   });
 
   it('names the State pattern when booleans stand in for a state machine', () => {
@@ -219,6 +219,46 @@ describe('MockLlmClient', () => {
       expect(score.justification).not.toMatch(/not separated at all\. Scored [1-9]/);
       expect(score.justification).not.toMatch(/0 of the three core flows.*Scored [1-9]/);
     }
+  });
+
+  it('declines to score a design its rules recognise nothing in', () => {
+    // Syntactically valid, semantically empty. Types and methods exist, so this
+    // is not the "no design at all" case - but no rule fires and no strength is
+    // detected either, so the mock has no basis for a number. Emitting the
+    // baseline anyway would hand the learner a score indistinguishable from an
+    // earned one, and it would go on to contaminate the next attempt's delta.
+    const payload = payloadFor(
+      Submission.create({
+        designSkeleton: [
+          'class Foo {',
+          '  bar() { }',
+          '}',
+          '',
+          'class Baz {',
+          '  qux() { }',
+          '}',
+        ].join('\n'),
+        designDecisions: 'These names are placeholders while I work out the shape of it.',
+        assumptions: 'Nothing decided yet about scope or edge cases at this stage.',
+      }),
+    );
+
+    // Abstention is per-dimension. One rule does fire here - there are no
+    // interfaces, which is a real observation about coupling - but knowing that
+    // says nothing about cohesion, completeness or extensibility, and those
+    // must not be scored off a baseline nobody reasoned toward.
+    const unassessed = payload.dimensionScores.filter((score) => score.score === null);
+
+    expect(unassessed.length).toBeGreaterThanOrEqual(3);
+    expect(unassessed[0]?.justification).toMatch(/not assessed/i);
+    expect(payload.strengths).toHaveLength(0);
+  });
+
+  it('still scores normally when a rule does fire', () => {
+    // Abstention must not swallow the cases the rules genuinely handle.
+    const payload = payloadFor(godClassSubmission());
+
+    expect(payload.dimensionScores.every((score) => score.score !== null)).toBe(true);
   });
 
   it('scores every dimension the rubric defines, exactly once', () => {
