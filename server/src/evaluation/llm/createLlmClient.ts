@@ -38,8 +38,9 @@ export function createLlmClient(env: NodeJS.ProcessEnv = process.env): LlmClient
         return fallback('LLM_PROVIDER=openai but OPENAI_API_KEY is not set');
       }
       const model = env['OPENAI_MODEL']?.trim();
+      const timeoutMs = timeoutFrom(env);
       return {
-        client: new OpenAiLlmClient(model ? { apiKey, model } : { apiKey }),
+        client: new OpenAiLlmClient({ apiKey, ...(model && { model }), ...(timeoutMs && { timeoutMs }) }),
         notice: `Semantic evaluation: OpenAI (${model ?? 'gpt-4o-mini'}).`,
       };
     }
@@ -50,8 +51,9 @@ export function createLlmClient(env: NodeJS.ProcessEnv = process.env): LlmClient
         return fallback('LLM_PROVIDER=gemini but GEMINI_API_KEY is not set');
       }
       const model = env['GEMINI_MODEL']?.trim();
+      const timeoutMs = timeoutFrom(env);
       return {
-        client: new GeminiLlmClient(model ? { apiKey, model } : { apiKey }),
+        client: new GeminiLlmClient({ apiKey, ...(model && { model }), ...(timeoutMs && { timeoutMs }) }),
         notice: `Semantic evaluation: Gemini (${model ?? 'gemini-3.6-flash'}).`,
       };
     }
@@ -65,6 +67,19 @@ export function createLlmClient(env: NodeJS.ProcessEnv = process.env): LlmClient
     default:
       return fallback(`Unknown LLM_PROVIDER "${requested}"`);
   }
+}
+
+/**
+ * Per-call timeout, in milliseconds.
+ *
+ * Configurable because model latency varies by more than the default allows.
+ * A reasoning-heavy model can sit close to a minute on a full rubric prompt,
+ * and needing a code edit to accommodate that would be the wrong shape of
+ * problem - the operator picking the model should be able to pick its budget.
+ */
+function timeoutFrom(env: NodeJS.ProcessEnv): number | undefined {
+  const raw = Number(env['LLM_TIMEOUT_MS']);
+  return Number.isFinite(raw) && raw > 0 ? raw : undefined;
 }
 
 function fallback(reason: string): LlmClientSelection {
