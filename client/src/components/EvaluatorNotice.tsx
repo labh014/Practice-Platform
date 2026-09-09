@@ -42,8 +42,9 @@ export function EvaluatorNotice() {
       <span className="evaluator-notice__tag">Offline evaluator</span>
       <span className="evaluator-notice__text">
         Feedback is coming from pattern rules, not a model reading your design. It
-        recognises common mistakes in these two problems and will miss subtler ones. Set{' '}
-        <code>GEMINI_API_KEY</code> in <code>server/.env</code> for real evaluation.
+        knows the Parking Lot and Vending Machine problems, and declines to score where
+        it cannot judge rather than guessing. Set <code>GEMINI_API_KEY</code> in{' '}
+        <code>server/.env</code> for real evaluation.
       </span>
     </div>
   );

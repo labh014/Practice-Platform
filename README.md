@@ -25,7 +25,7 @@ offline evaluator and the whole loop works with no network and no cost.
 |---|---|
 | Client | http://localhost:5173 |
 | API | http://localhost:4000/api |
-| Tests | `npm test` — 168 tests, no network |
+| Tests | `npm test` — 204 tests, no network |
 | Typecheck | `npm run typecheck` |
 
 Node 20+ required.
@@ -112,8 +112,9 @@ warning and falls back to the mock rather than refusing to boot.
 rules, quoting real lines as evidence. A God class and a separated design get
 visibly different reviews.
 
-**It is pattern rules, not comprehension.** It recognises the mistakes the two
-seeded problems are built around and will miss subtler ones. Two things follow:
+**It is pattern rules, not comprehension.** Its rules are written around Parking
+Lot and Vending Machine; on the other seeded problems it will recognise little.
+Two things follow:
 
 1. **It says so.** A banner while it is active, and a badge on every attempt it
    judged — because history outlives configuration.
@@ -206,7 +207,7 @@ hand you the answer to what it measures.
 ## Testing
 
 ```bash
-npm test      # 168 tests
+npm test      # 204 tests
 ```
 
 No test touches the network. Coverage sits on the behaviour that matters: domain
