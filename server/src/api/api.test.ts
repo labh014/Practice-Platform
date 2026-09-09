@@ -434,6 +434,26 @@ describe('routing', () => {
   });
 
   it('serves the health check', async () => {
-    await request(app).get('/api/health').expect(200, { status: 'ok' });
+    const response = await request(app).get('/api/health').expect(200);
+
+    expect(response.body.status).toBe('ok');
+  });
+
+  it('reports which evaluator is answering, so the UI can say so', async () => {
+    // Rule-based feedback is indistinguishable from a model's in the UI. The
+    // client needs to be told which one produced it, or a learner is invited to
+    // trust a judgement the rules were never able to make.
+    const response = await request(app).get('/api/health').expect(200);
+
+    expect(response.body.evaluator).toEqual({ name: 'mock', isOffline: true });
+  });
+
+  it('does not flag a real model as offline', async () => {
+    boot(new StubLlmClient([validEvaluationJson()]));
+
+    const response = await request(app).get('/api/health').expect(200);
+
+    expect(response.body.evaluator.isOffline).toBe(false);
+    expect(response.body.evaluator.name).toBe('stub');
   });
 });

@@ -74,7 +74,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+export interface HealthResponse {
+  status: string;
+  evaluator: { name: string; isOffline: boolean };
+}
+
 export const api = {
+  getHealth(): Promise<HealthResponse> {
+    return request('/health');
+  },
+
   listProblems(): Promise<ProblemSummary[]> {
     return request(`/problems?userId=${encodeURIComponent(USER_ID)}`);
   },

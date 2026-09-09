@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { AppHeader } from './components/AppHeader';
+import { EvaluatorNotice } from './components/EvaluatorNotice';
 import { EmptyState } from './components/States';
 import ProblemListPage from './pages/ProblemListPage';
 import WorkspacePage from './pages/WorkspacePage';
@@ -9,6 +10,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AppHeader />
+      <EvaluatorNotice />
       <main>
         <Routes>
           <Route path="/" element={<ProblemListPage />} />

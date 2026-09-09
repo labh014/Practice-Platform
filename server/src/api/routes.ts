@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import type { AttemptService } from '../application/AttemptService';
 import type { ProblemService } from '../application/ProblemService';
+import type { EvaluatorInfo } from '../container';
 import {
   toAttemptDto,
   toAttemptSummaryDto,
@@ -20,11 +21,14 @@ import { SubmitAttemptRequestSchema, UserQuerySchema, validate } from './validat
 export function createRouter(services: {
   attempts: AttemptService;
   problems: ProblemService;
+  evaluator: EvaluatorInfo;
 }): Router {
   const router = Router();
 
+  // Reports which evaluator is answering, so the client can say so rather than
+  // letting rule-based feedback pass for a model reading the design.
   router.get('/health', (_req, res) => {
-    res.json({ status: 'ok' });
+    res.json({ status: 'ok', evaluator: services.evaluator });
   });
 
   router.get(

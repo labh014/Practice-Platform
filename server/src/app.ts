@@ -20,7 +20,11 @@ export function createApp(container: Container): Express {
 
   app.use(
     '/api',
-    createRouter({ attempts: container.attempts, problems: container.problems }),
+    createRouter({
+      attempts: container.attempts,
+      problems: container.problems,
+      evaluator: container.evaluator,
+    }),
   );
 
   app.use(notFoundHandler);

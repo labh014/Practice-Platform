@@ -15,6 +15,21 @@ export interface Container {
   readonly problems: ProblemService;
   readonly attemptRepository: InMemoryAttemptRepository;
   readonly llmNotice: string;
+  readonly evaluator: EvaluatorInfo;
+}
+
+/**
+ * Which evaluator is actually running.
+ *
+ * Surfaced to the client so the UI can say so. The offline evaluator applies
+ * pattern rules rather than reading a design, and a learner has no way to tell
+ * that from the feedback alone - it looks the same. Leaving that unsaid invites
+ * them to trust a score the rules were never able to justify.
+ */
+export interface EvaluatorInfo {
+  readonly name: string;
+  /** True for the rule-based fallback; false when a real model is answering. */
+  readonly isOffline: boolean;
 }
 
 /**
@@ -68,5 +83,9 @@ export function createContainer(options?: {
     problems,
     attemptRepository,
     llmNotice: selection.notice,
+    evaluator: {
+      name: selection.client.modelName,
+      isOffline: selection.client.modelName === 'mock',
+    },
   };
 }

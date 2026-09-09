@@ -1,0 +1,37 @@
+/* Informative, not alarming. The platform is working correctly; it is simply
+   working with a less capable evaluator, and the learner deserves to know. */
+.evaluator-notice {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 20px;
+  background: var(--major-soft);
+  border-bottom: 1px solid var(--major-border);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.evaluator-notice__tag {
+  flex-shrink: 0;
+  padding: 1px 8px;
+  border: 1px solid var(--major-border);
+  border-radius: 999px;
+  color: var(--major);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.evaluator-notice__text {
+  color: var(--text-muted);
+}
+
+.evaluator-notice code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 11px;
+}

@@ -43,7 +43,7 @@ export class GeminiLlmClient implements LlmClient {
     }
 
     this.apiKey = params.apiKey;
-    this.modelName = params.model ?? 'gemini-2.0-flash';
+    this.modelName = params.model ?? 'gemini-3.6-flash';
     this.timeoutMs = params.timeoutMs ?? DEFAULT_LLM_TIMEOUT_MS;
   }
 

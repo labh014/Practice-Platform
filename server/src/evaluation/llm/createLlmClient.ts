@@ -52,7 +52,7 @@ export function createLlmClient(env: NodeJS.ProcessEnv = process.env): LlmClient
       const model = env['GEMINI_MODEL']?.trim();
       return {
         client: new GeminiLlmClient(model ? { apiKey, model } : { apiKey }),
-        notice: `Semantic evaluation: Gemini (${model ?? 'gemini-2.0-flash'}).`,
+        notice: `Semantic evaluation: Gemini (${model ?? 'gemini-3.6-flash'}).`,
       };
     }
 
